@@ -1,0 +1,5 @@
+registries:
+  - registry1
+  - registry2
+block_registries:
+  - registry4

@@ -1,11 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 IFS=$'\n\t'
-#set -x
+set -x
+
+
 #declare -a STR_RESULT
 # Test Suite for registry YAML parsing
-STR_RESULT[0]=' --block-registry registry3 --insecure-registry registry2 --add-registry registry1'
-JSON_RESULT[0]='{"block_registries":["registry3"],"insecure_registries":["registry2"],"registries":["registry1"]}'
+#STR_RESULT[0]=' --block-registry registry3 --insecure-registry registry2 --add-registry registry1'
+
+STR_RESULT[0]='--add-registry registry1 --insecure-registry registry2 --block-registry registry3 '
+JSON_RESULT[0]='{"registries.search": {"registries": ["registry1"]}, "registries.insecure": {"registries": ["registry2"]}, "registries.block": {"registries": ["registry3"]}}'
 
 STR_RESULT[1]=' --block-registry registry3 --insecure-registry registry2 --add-registry registry1 --add-registry registry1a'
 JSON_RESULT[1]='{"block_registries":["registry3"],"insecure_registries":["registry2"],"registries":["registry1","registry1a"]}'
@@ -24,27 +28,27 @@ JSON_RESULT[5]='{}'
 
 #TEST99
 #test/test99.yaml is invalid YAML
-
+PYTHON=${PYTHON:-/usr/bin/python3}
 PWD=$(pwd)
 TEST_DIR="${PWD}/test"
-BINARY="${PWD}/registries"
+BINARY="${PWD}/registries/registries.py"
 counter=0;
 error=0;
 space="     "
 echo "Running tests..."
 
 for i in "${STR_RESULT[@]}"; do
-	RESULT=$("${BINARY}" -i "${TEST_DIR}/test$counter.yaml")
-	if [[ "${i}" != "${RESULT}" ]]; then
+	RESULT=$("${PYTHON}" "${BINARY}" -i "${TEST_DIR}/test$counter.yaml")
+	if [[ "${i}" != ${RESULT} ]]; then
 		echo "${space} STR_TEST${counter} failed"
 		error=1
 	else
 		echo "${space} STR_TEST${counter} passed"
 	fi
 
-	RESULT=$("${BINARY}" -j -i "${TEST_DIR}/test$counter.yaml")
 
-	if [[ "${JSON_RESULT[counter]}" != "${RESULT}" ]]; then
+	RESULT=$("${PYTHON}" "${BINARY}" -j -i "${TEST_DIR}/test$counter.yaml")
+	if [[ ${JSON_RESULT[counter]} != ${RESULT} ]]; then
 		echo "${space} JSON_TEST${counter} failed"
 		error=1
 	else
@@ -52,6 +56,7 @@ for i in "${STR_RESULT[@]}"; do
 	fi
 
 	counter=$((counter+1))
+	exit
 
 done
 
